@@ -10,6 +10,7 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -60,22 +61,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "No Input", Toast.LENGTH_LONG).show();
                 }
                 else {
-                    String [] words = temp.split(" ");
-                    for(String word:words) {
-                        ClickableSpan clickableSpan = new ClickableSpan() {
-                            @Override
-                            public void onClick(@NonNull View widget) {
-                                TextView tv = (TextView) widget;
-                                Spanned s = (Spanned) tv.getText();
-                                int start = s.getSpanStart(this);
-                                int end = s.getSpanEnd(this);
-                                Log.d("Message", "onClick [" + s.subSequence(start, end) + "]");
-                            }
-                        };
-                        SpannableString spannableString = new SpannableString(word);
-                        spannableString.setSpan(clickableSpan, 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        result.append(spannableString + " ");
-                    }
+                    result.setText(temp);
 //                    SpannableString spannableString = new SpannableString(temp);
 //                    spannableString.setSpan(clickableSpan,0,temp.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 //                    result.setText(spannableString);
@@ -86,8 +72,60 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        result.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    int mOffset = result.getOffsetForPosition(event.getX(), event.getY());
+                    //  mTxtOffset.setText("" + mOffset);
+                    Toast.makeText(MainActivity.this, findWordForRightHanded(result.getText().toString(), mOffset), Toast.LENGTH_SHORT).show();
+
+                }
+                return false;
+            }
+        });
     }
 
+    private String findWordForRightHanded(String str, int offset) { // when you touch ' ', this method returns left word.
+        if (str.length() == offset) {
+            offset--; // without this code, you will get exception when touching end of the text
+        }
+
+        if (str.charAt(offset) == ' ') {
+            offset--;
+        }
+        int startIndex = offset;
+        int endIndex = offset;
+
+        try {
+            while (str.charAt(startIndex) != ' ' && str.charAt(startIndex) != '\n') {
+                startIndex--;
+            }
+        } catch (StringIndexOutOfBoundsException e) {
+            startIndex = 0;
+        }
+
+        try {
+            while (str.charAt(endIndex) != ' ' && str.charAt(endIndex) != '\n') {
+                endIndex++;
+            }
+        } catch (StringIndexOutOfBoundsException e) {
+            endIndex = str.length();
+        }
+
+        // without this code, you will get 'here!' instead of 'here'
+        // if you use only english, just check whether this is alphabet,
+        // but 'I' use korean, so i use below algorithm to get clean word.
+        char last = str.charAt(endIndex - 1);
+        if (last == ',' || last == '.' ||
+                last == '!' || last == '?' ||
+                last == ':' || last == ';') {
+            endIndex--;
+        }
+
+        return str.substring(startIndex, endIndex);
+    }
 //    class getMeaning extends AsyncTask<String, Void, Void> {
 //
 //        @Override

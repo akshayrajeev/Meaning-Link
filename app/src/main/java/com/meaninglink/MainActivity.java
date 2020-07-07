@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -86,19 +87,34 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        tv_result.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
         tv_result.setOnTouchListener(new View.OnTouchListener() {
+            private static final int MAX_CLICK_DURATION = 100;
+            private long timerStart;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    int mOffset = tv_result.getOffsetForPosition(event.getX(), event.getY());
-                    String input = tv_result.getText().toString();
-                    try {
-                        if(Character.isLetter(input.charAt(mOffset))) {
-                            String clickedText  = getClickedText(input, mOffset);
-                            new getMeaning().execute(clickedText);
+                    timerStart = System.currentTimeMillis();
+                }
+                else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    long duration = System.currentTimeMillis() - timerStart;
+                    if (duration < MAX_CLICK_DURATION) {
+                        int mOffset = tv_result.getOffsetForPosition(event.getX(), event.getY());
+                        String input = tv_result.getText().toString();
+                        try {
+                            if (Character.isLetter(input.charAt(mOffset))) {
+                                String clickedText = getClickedText(input, mOffset);
+                                new getMeaning().execute(clickedText);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
                 }
                 return false;

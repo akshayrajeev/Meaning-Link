@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="padding">40dp</dimen>
+    <dimen name="text_size">28sp</dimen>
+    <dimen name="text_size_textview">30sp</dimen>
 </resources>

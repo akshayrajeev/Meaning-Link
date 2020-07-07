@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,22 +31,16 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity {
     HashMap<String,Word> dictionary;
     AlertDialog.Builder builder;
+    SharedPreferences sharedPreferences;
+    Gson gson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Gson gson = new Gson();
-        SharedPreferences sharedPreferences = getSharedPreferences("pref", MODE_PRIVATE);
-        String dictionaryString = sharedPreferences.getString("dict", "");
-        if(!dictionaryString.equals("")) {
-            Type type = new TypeToken<HashMap<String,Word>>(){}.getType();
-            dictionary = gson.fromJson(dictionaryString, type);
-        }
-        else{
-            dictionary = new HashMap<>();
-        }
+        loadDictionary();
+
         final EditText et_input = findViewById(R.id.activity_main_et_input);
         final TextView tv_result = findViewById(R.id.activity_main_tv_result);
         final Button btn_find = findViewById(R.id.activity_main_btn_find);
@@ -110,7 +103,13 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             if (Character.isLetter(input.charAt(mOffset))) {
                                 String clickedText = getClickedText(input, mOffset);
-                                new getMeaning().execute(clickedText);
+                                if(dictionary.containsKey(clickedText)) {
+                                    Word word = dictionary.get(clickedText);
+                                    builder.setMessage("Phonetic:\n\t\t\t" + word.getPhonetic());
+                                }
+                                else {
+                                    new getMeaning().execute(clickedText);
+                                }
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -147,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
                 word.setPhonetic(phonetic);
                 dictionary.put(strings[0], word);
                 builder.setMessage("Phonetic:\n\t\t\t" + phonetic);
+                //saveDictionary();
             }catch (IOException e) {
                 e.printStackTrace();
             }
@@ -187,5 +187,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return string.substring(startIndex, endIndex);
+    }
+
+    private void saveDictionary() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        String hashMap = gson.toJson(dictionary);
+        editor.putString("dict", hashMap);
+        editor.apply();
+    }
+
+    private void loadDictionary() {
+        gson = new Gson();
+        sharedPreferences = getSharedPreferences("pref", MODE_PRIVATE);
+        final String dictionaryString = sharedPreferences.getString("dict", "");
+        if(!dictionaryString.equals("")) {
+            Type type = new TypeToken<HashMap<String,Word>>(){}.getType();
+            dictionary = gson.fromJson(dictionaryString, type);
+        }
+        else{
+            dictionary = new HashMap<>();
+        }
     }
 }

@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         tv_result.setOnTouchListener(new View.OnTouchListener() {
-            private static final int MAX_CLICK_DURATION = 15000;
+            private static final int MAX_CLICK_DURATION = 100;
             private long timerStart;
             @Override
             public boolean onTouch(View v, MotionEvent event) {

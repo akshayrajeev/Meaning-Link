@@ -2,6 +2,7 @@ package com.meaninglink;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -80,15 +81,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        tv_result.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
         tv_result.setOnTouchListener(new View.OnTouchListener() {
-            private static final int MAX_CLICK_DURATION = 100;
+            private static final int MAX_CLICK_DURATION = 15000;
             private long timerStart;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -138,20 +132,34 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(final String... strings) {
             URL += strings[0];
+
             try {
                 Word word = new Word();
+
                 Document document = Jsoup.connect(URL).userAgent(USER_AGENT).get();
+
+                //To get the phonetics of the searched word
                 Elements phoneticElement = document.select("span[class=XpoqFe]");
                 String phonetic = phoneticElement.text();
+
+                //To get the meaning of the searched word
+                Elements meaningElement = document.select("div[class=QIclbb XpoqFe]");
+                String meaning = meaningElement.text();
+
                 word.setPhonetic(phonetic);
+                word.setMeaning(meaning);
+
                 dictionary.put(strings[0], word);
-                builder.setMessage("Phonetic:\n\t\t\t" + phonetic);
+
+                builder.setMessage("Word:\n\t\t\t" +strings[0] +"\n\n" +"Phonetic:\n\t\t\t" + phonetic +"\n\n\t\t\t" + meaning);
                 //saveDictionary();
+
             }catch (IOException e) {
                 e.printStackTrace();
             }
             return null;
         }
+
 
         @Override
         protected void onPostExecute(Void aVoid) {

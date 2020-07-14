@@ -8,9 +8,13 @@ public class Word {
         this.phonetic = phonetic;
     }
 
-    public void setMeaning(String meaning) {this.meaning= meaning; }
+    public void setMeaning(String meaning) {this.meaning = meaning; }
 
     public String getPhonetic() {
         return phonetic;
+    }
+
+    public String getMeaning() {
+        return meaning;
     }
 }

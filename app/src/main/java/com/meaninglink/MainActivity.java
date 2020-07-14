@@ -2,16 +2,16 @@ package com.meaninglink;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.viewpager.widget.ViewPager;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
+import android.text.Html;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     AlertDialog.Builder builder;
     SharedPreferences sharedPreferences;
     Gson gson;
+    TextView tv_result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +44,8 @@ public class MainActivity extends AppCompatActivity {
         loadDictionary();
 
         final EditText et_input = findViewById(R.id.activity_main_et_input);
-        final TextView tv_result = findViewById(R.id.activity_main_tv_result);
         final Button btn_find = findViewById(R.id.activity_main_btn_find);
+        tv_result = findViewById(R.id.activity_main_tv_result);
         builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("Meaning");
 
@@ -75,14 +76,13 @@ public class MainActivity extends AppCompatActivity {
                         et_input.setVisibility(View.GONE);
                         tv_result.setVisibility(View.VISIBLE);
                         tv_result.setText(temp);
-                        tv_result.setMovementMethod(new ScrollingMovementMethod());
+                        //tv_result.setMovementMethod(new ScrollingMovementMethod());
                     }
                 }
             }
         });
 
         tv_result.setOnTouchListener(new View.OnTouchListener() {
-            private static final int MAX_CLICK_DURATION = 100;
             private long timerStart;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -91,15 +91,14 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else if (event.getAction() == MotionEvent.ACTION_UP) {
                     long duration = System.currentTimeMillis() - timerStart;
-                    if (duration < MAX_CLICK_DURATION) {
+                    if (duration < ViewConfiguration.getTapTimeout()) {
                         int mOffset = tv_result.getOffsetForPosition(event.getX(), event.getY());
                         String input = tv_result.getText().toString();
                         try {
                             if (Character.isLetter(input.charAt(mOffset))) {
                                 String clickedText = getClickedText(input, mOffset);
                                 if(dictionary.containsKey(clickedText)) {
-                                    Word word = dictionary.get(clickedText);
-                                    builder.setMessage("Phonetic:\n\t\t\t" + word.getPhonetic());
+                                    showDialog(clickedText);
                                 }
                                 else {
                                     new getMeaning().execute(clickedText);
@@ -115,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private class getMeaning extends AsyncTask<String, Void, Void> {
+    private class getMeaning extends AsyncTask<String, Void, String> {
         ProgressDialog pd;
         String URL = "https://www.google.com/search?q=define+";
         public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36";
@@ -130,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected Void doInBackground(final String... strings) {
+        protected String doInBackground(final String... strings) {
             URL += strings[0];
 
             try {
@@ -151,21 +150,19 @@ public class MainActivity extends AppCompatActivity {
 
                 dictionary.put(strings[0], word);
 
-                builder.setMessage("Word:\n\t\t\t" +strings[0] +"\n\n" +"Phonetic:\n\t\t\t" + phonetic +"\n\n\t\t\t" + meaning);
                 //saveDictionary();
 
             }catch (IOException e) {
                 e.printStackTrace();
             }
-            return null;
+            return strings[0];
         }
 
 
         @Override
-        protected void onPostExecute(Void aVoid) {
+        protected void onPostExecute(String clickedText) {
             pd.dismiss();
-            AlertDialog alertDialog = builder.create();
-            alertDialog.show();
+            showDialog(clickedText);
         }
     }
 
@@ -180,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (StringIndexOutOfBoundsException e) {
             startIndex = 0;
+            e.printStackTrace();
         }
 
         if(!Character.isLetter(string.charAt(startIndex))) {
@@ -191,10 +189,20 @@ public class MainActivity extends AppCompatActivity {
                 endIndex++;
             }
         } catch (StringIndexOutOfBoundsException e) {
-
+            e.printStackTrace();
         }
 
-        return string.substring(startIndex, endIndex);
+        String clickedText = string.substring(startIndex, endIndex);
+        changeStyle(clickedText, startIndex, endIndex);
+        return clickedText;
+    }
+
+    private void changeStyle(String clickedText, int startIndex, int endIndex) {
+        String input = tv_result.getText().toString();
+        String string = input.substring(0, startIndex);
+        string += "<b><font color=blue>" + clickedText + "</font></b>";
+        string += input.substring(endIndex);
+        tv_result.setText(Html.fromHtml(string));
     }
 
     private void saveDictionary() {
@@ -215,5 +223,12 @@ public class MainActivity extends AppCompatActivity {
         else{
             dictionary = new HashMap<>();
         }
+    }
+
+    private void showDialog(String clickedText) {
+        Word word = dictionary.get(clickedText);
+        builder.setMessage("Word:\n\t\t\t" + clickedText +"\n\n" +"Phonetic:\n\t\t\t" + word.getPhonetic() +"\n\n\t\t\t" + word.getMeaning());
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
     }
 }

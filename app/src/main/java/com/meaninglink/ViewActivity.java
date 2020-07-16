@@ -6,17 +6,20 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.Html;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,27 +32,39 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
-public class MainActivity extends AppCompatActivity {
+public class ViewActivity extends AppCompatActivity {
+    TextView tv_result;
     HashMap<String,Word> dictionary;
+    ArrayList<Note> notes;
     AlertDialog.Builder builder;
     SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
+    String key, input;
     Gson gson;
-    TextView tv_result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        setContentView(R.layout.activity_view);
+
+        sharedPreferences = getSharedPreferences("pref", MODE_PRIVATE);
+        gson = new Gson();
 
         loadDictionary();
+        loadDocument();
 
-        final EditText et_input = findViewById(R.id.activity_edit_et_input);
-        final Button btn_find = findViewById(R.id.activity_main_btn_find);
-        tv_result = findViewById(R.id.activity_main_tv_result);
-        builder = new AlertDialog.Builder(MainActivity.this);
+        tv_result = findViewById(R.id.activity_view_tv_result);
+        tv_result.setMovementMethod(new ScrollingMovementMethod());
+        Intent i = getIntent();
+        input = i.getStringExtra("input");
+        key = i.getStringExtra("key");
+
+        tv_result.setText(input);
+        builder = new AlertDialog.Builder(ViewActivity.this);
         builder.setTitle("Meaning");
 
         builder.setNegativeButton("Go Back", new DialogInterface.OnClickListener() {
@@ -59,32 +74,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        btn_find.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-//                if(btn_find.getText().equals("Edit")) {
-//                    btn_find.setText(R.string.find);
-//                    tv_result.setVisibility(View.GONE);
-//                    et_input.setVisibility(View.VISIBLE);
-//                }
-//                else {
-//                    String temp = et_input.getText().toString();
-//                    if(temp.equals("")) {
-//                        Toast.makeText(getApplicationContext(), "No Input", Toast.LENGTH_LONG).show();
-//                    }
-//                    else {
-//                        inputMethodManager.hideSoftInputFromWindow(tv_result.getWindowToken(), 0);
-//                        btn_find.setText(R.string.edit);
-//                        et_input.setVisibility(View.GONE);
-//                        tv_result.setVisibility(View.VISIBLE);
-//                        tv_result.setText(temp);
-//                        tv_result.setMovementMethod(new ScrollingMovementMethod());
-//                    }
-//                }
-//            }
-//        });
-        
+
 
         tv_result.setOnTouchListener(new View.OnTouchListener() {
             private long timerStart;
@@ -97,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
                     long duration = System.currentTimeMillis() - timerStart;
                     if (duration < ViewConfiguration.getTapTimeout()) {
                         int mOffset = tv_result.getOffsetForPosition(event.getX(), event.getY());
-                        String input = tv_result.getText().toString();
                         try {
                             if (Character.isLetter(input.charAt(mOffset))) {
                                 String clickedText = getClickedText(input, mOffset);
@@ -105,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                                     showDialog(clickedText);
                                 }
                                 else {
-                                    //new getMeaning().execute(clickedText);
+                                    new getMeaning().execute(clickedText);
                                 }
                             }
                         } catch (Exception e) {
@@ -126,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            pd = new ProgressDialog(MainActivity.this);
+            pd = new ProgressDialog(ViewActivity.this);
             pd.setMessage("Please wait");
             pd.setCancelable(false);
             pd.show();
@@ -196,21 +185,18 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        String clickedText = string.substring(startIndex, endIndex);
-        changeStyle(clickedText, startIndex, endIndex);
-        return clickedText;
+        changeStyle(startIndex, endIndex);
+        return string.substring(startIndex, endIndex);
     }
 
-    private void changeStyle(String clickedText, int startIndex, int endIndex) {
-        String input = tv_result.getText().toString();
-        String string = input.substring(0, startIndex);
-        //string += "<b><font color=blue>" + clickedText + "</font></b>";
-        string += input.substring(endIndex);
-        tv_result.setText(Html.fromHtml(string));
+    private void changeStyle(int startIndex, int endIndex) {
+        SpannableString word = new SpannableString(input);
+        word.setSpan(new ForegroundColorSpan(Color.BLUE), startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        tv_result.setText(word);
     }
 
     private void saveDictionary() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor = sharedPreferences.edit();
         String hashMap = gson.toJson(dictionary);
         editor.putString("dict", hashMap);
         editor.apply();
@@ -218,7 +204,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadDictionary() {
         gson = new Gson();
-        sharedPreferences = getSharedPreferences("pref", MODE_PRIVATE);
         final String dictionaryString = sharedPreferences.getString("dict", "");
         if(!dictionaryString.equals("")) {
             Type type = new TypeToken<HashMap<String,Word>>(){}.getType();
@@ -229,6 +214,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    void loadDocument() {
+        String documentString = sharedPreferences.getString("docs", "");
+        if(!documentString.equals("")) {
+            Type type = new TypeToken<ArrayList<Note>>(){}.getType();
+            notes = gson.fromJson(documentString, type);
+        }
+        else{
+            notes = new ArrayList<>();
+        }
+    }
+
+    void saveDocument() {
+        editor = sharedPreferences.edit();
+        String arrayList = gson.toJson(notes);
+        editor.putString("docs", arrayList);
+        editor.commit();
+    }
+
     private void showDialog(String clickedText) {
         Word word = dictionary.get(clickedText);
         builder.setMessage("Word:\n\t\t\t" + clickedText +"\n\n" +"Phonetic:\n\t\t\t" + word.getPhonetic() +"\n\n\t\t\t" + word.getMeaning());
@@ -237,20 +240,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.view_menu, menu);
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case android.R.id.home:
+            case R.id.view_menu_edit:
+                Intent i = new Intent(getApplicationContext(), EditActivity.class);
+                i.putExtra("input", input);
+                i.putExtra("key", key);
+                startActivity(i);
+                finish();
                 return true;
             case R.id.view_menu_save:
-                Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_LONG).show();
+                Iterator<Note> iterator = notes.iterator();
+                while(iterator.hasNext()) {
+                    if(iterator.next().getKey().equals(key)) {
+                        iterator.remove();
+                    }
+                }
+                Note note = new Note(key, input);
+                notes.add(0, note);
+                saveDocument();
+                Toast.makeText(getApplicationContext(), "Save Successful!", Toast.LENGTH_LONG).show();
+                invalidateOptionsMenu();
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.view_menu, menu);
+        MenuItem item = menu.findItem(R.id.view_menu_save);
+        for (Note note : notes) {
+            if (note.getKey().equals(key)) {
+                if(note.getInput().equals(input)){
+                    item.setEnabled(false);
+                    item.getIcon().setAlpha(130);
+                }
+            }
+        }
+        return true;
     }
 }

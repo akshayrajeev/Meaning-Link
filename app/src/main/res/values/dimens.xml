@@ -2,5 +2,5 @@
 <resources>
     <dimen name="padding">20dp</dimen>
     <dimen name="text_size">20sp</dimen>
-    <dimen name="text_size_textview">20sp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
 </resources>

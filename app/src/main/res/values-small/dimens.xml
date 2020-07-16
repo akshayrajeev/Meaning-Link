@@ -2,5 +2,4 @@
 <resources>
     <dimen name="padding">10dp</dimen>
     <dimen name="text_size">16sp</dimen>
-    <dimen name="text_size_textview">16sp</dimen>
 </resources>

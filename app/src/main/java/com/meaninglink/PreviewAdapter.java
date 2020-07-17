@@ -24,7 +24,7 @@ class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.row_layout, parent, false);
         int width = parent.getMeasuredWidth();
-        itemView.getLayoutParams().height = width/3;
+        itemView.getLayoutParams().height = width/2;
         return new ViewHolder(itemView);
     }
 

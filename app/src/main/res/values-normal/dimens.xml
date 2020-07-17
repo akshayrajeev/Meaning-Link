@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="padding">20dp</dimen>
+    <dimen name="preview_padding">10dp</dimen>
     <dimen name="text_size">20sp</dimen>
+    <dimen name="hint_size">16sp</dimen>
 </resources>

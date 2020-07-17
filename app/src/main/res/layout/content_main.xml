@@ -9,6 +9,7 @@
         android:id="@+id/content_main_rv_preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#f2f2f2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

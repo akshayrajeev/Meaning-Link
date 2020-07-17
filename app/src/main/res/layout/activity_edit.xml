@@ -5,24 +5,25 @@
     android:id="@+id/contraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="@dimen/padding"
     tools:context=".EditActivity">
 
-    <EditText
-        android:id="@+id/activity_edit_et_input"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:ems="10"
-        android:gravity="start"
-        android:paddingStart="@dimen/padding"
-        android:paddingEnd="@dimen/padding"
-        android:paddingTop="@dimen/padding"
-        android:layout_marginBottom="@dimen/padding"
-        android:hint="Type Text Here..."
-        android:inputType="textMultiLine"
-        android:textSize="@dimen/text_size"
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:hintTextAppearance="@style/TextInputEditTextHint"
+        style="@style/TextInputEditTextBorder">
 
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/activity_edit_et_input"
+            android:gravity="start"
+            android:textSize="@dimen/text_size"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="Type Text Here..." />
+    </com.google.android.material.textfield.TextInputLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

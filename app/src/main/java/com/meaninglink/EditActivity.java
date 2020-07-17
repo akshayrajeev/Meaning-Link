@@ -25,8 +25,8 @@ public class EditActivity extends AppCompatActivity {
 
         et_input = findViewById(R.id.activity_edit_et_input);
         Intent i = getIntent();
-        String input = i.getStringExtra("input");
 
+        String input = i.getStringExtra("input");
         if(input != null) {
             et_input.setText(input);
             key = i.getStringExtra("key");

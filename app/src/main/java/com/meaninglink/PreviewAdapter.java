@@ -23,6 +23,8 @@ class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
     public PreviewAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.row_layout, parent, false);
+        int width = parent.getMeasuredWidth();
+        itemView.getLayoutParams().height = width/3;
         return new ViewHolder(itemView);
     }
 

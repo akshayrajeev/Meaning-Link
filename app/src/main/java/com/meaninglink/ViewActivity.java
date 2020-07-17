@@ -9,12 +9,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -54,8 +56,8 @@ public class ViewActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("pref", MODE_PRIVATE);
         gson = new Gson();
 
-        loadDictionary();
-        loadDocument();
+        load("dict");
+        load("note");
 
         tv_result = findViewById(R.id.activity_view_tv_result);
         tv_result.setMovementMethod(new ScrollingMovementMethod());
@@ -192,44 +194,46 @@ public class ViewActivity extends AppCompatActivity {
     private void changeStyle(int startIndex, int endIndex) {
         SpannableString word = new SpannableString(input);
         word.setSpan(new ForegroundColorSpan(Color.BLUE), startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        word.setSpan(new StyleSpan(Typeface.BOLD), startIndex,endIndex,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         tv_result.setText(word);
     }
 
-    private void saveDictionary() {
+    private void save(String mode) {
         editor = sharedPreferences.edit();
-        String hashMap = gson.toJson(dictionary);
-        editor.putString("dict", hashMap);
+        if(mode.equals("dict")) {
+            String hashMap = gson.toJson(dictionary);
+            editor.putString("dict", hashMap);
+        }
+        else if(mode.equals("note")) {
+            String arrayList = gson.toJson(notes);
+            editor.putString("note", arrayList);
+        }
         editor.apply();
     }
 
-    private void loadDictionary() {
+    private void load(String mode) {
         gson = new Gson();
-        final String dictionaryString = sharedPreferences.getString("dict", "");
-        if(!dictionaryString.equals("")) {
-            Type type = new TypeToken<HashMap<String,Word>>(){}.getType();
-            dictionary = gson.fromJson(dictionaryString, type);
+        if(mode.equals("dict")) {
+            final String dictionaryString = sharedPreferences.getString("dict", "");
+            if(!dictionaryString.equals("")) {
+                Type type = new TypeToken<HashMap<String,Word>>(){}.getType();
+                dictionary = gson.fromJson(dictionaryString, type);
+            }
+            else{
+                dictionary = new HashMap<>();
+            }
         }
-        else{
-            dictionary = new HashMap<>();
+        else if(mode.equals("note")) {
+            String documentString = sharedPreferences.getString("note", "");
+            if(!documentString.equals("")) {
+                Type type = new TypeToken<ArrayList<Note>>(){}.getType();
+                notes = gson.fromJson(documentString, type);
+            }
+            else{
+                notes = new ArrayList<>();
+            }
         }
-    }
 
-    void loadDocument() {
-        String documentString = sharedPreferences.getString("docs", "");
-        if(!documentString.equals("")) {
-            Type type = new TypeToken<ArrayList<Note>>(){}.getType();
-            notes = gson.fromJson(documentString, type);
-        }
-        else{
-            notes = new ArrayList<>();
-        }
-    }
-
-    void saveDocument() {
-        editor = sharedPreferences.edit();
-        String arrayList = gson.toJson(notes);
-        editor.putString("docs", arrayList);
-        editor.commit();
     }
 
     private void showDialog(String clickedText) {
@@ -258,7 +262,7 @@ public class ViewActivity extends AppCompatActivity {
                 }
                 Note note = new Note(key, input);
                 notes.add(0, note);
-                saveDocument();
+                save("note");
                 Toast.makeText(getApplicationContext(), "Save Successful!", Toast.LENGTH_LONG).show();
                 invalidateOptionsMenu();
                 return true;
@@ -275,6 +279,9 @@ public class ViewActivity extends AppCompatActivity {
                 if(note.getInput().equals(input)){
                     item.setEnabled(false);
                     item.getIcon().setAlpha(130);
+                }
+                else {
+                    item.getIcon().setAlpha(255);
                 }
             }
         }

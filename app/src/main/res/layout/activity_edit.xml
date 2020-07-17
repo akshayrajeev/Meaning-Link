@@ -5,7 +5,6 @@
     android:id="@+id/contraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/padding"
     tools:context=".EditActivity">
 
     <EditText
@@ -14,6 +13,10 @@
         android:layout_height="match_parent"
         android:ems="10"
         android:gravity="start"
+        android:paddingStart="@dimen/padding"
+        android:paddingEnd="@dimen/padding"
+        android:paddingTop="@dimen/padding"
+        android:layout_marginBottom="@dimen/padding"
         android:hint="Type Text Here..."
         android:inputType="textMultiLine"
         android:textSize="@dimen/text_size"

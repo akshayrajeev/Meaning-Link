@@ -3,6 +3,7 @@ package com.meaninglink;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -22,18 +23,16 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -43,21 +42,22 @@ public class ViewActivity extends AppCompatActivity {
     HashMap<String,Word> dictionary;
     ArrayList<Note> notes;
     AlertDialog.Builder builder;
-    SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
     String key, input;
-    Gson gson;
+    SaveLoad saveLoad;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view);
 
-        sharedPreferences = getSharedPreferences("pref", MODE_PRIVATE);
-        gson = new Gson();
+        saveLoad = new SaveLoad(getApplicationContext());
 
-        load("dict");
-        load("note");
+        dictionary = saveLoad.loadDictionary();
+        notes = saveLoad.loadNotes();
+
+        if(notes.size() == 0) {
+            overlay();
+        }
 
         tv_result = findViewById(R.id.activity_view_tv_result);
         tv_result.setMovementMethod(new ScrollingMovementMethod());
@@ -161,6 +161,26 @@ public class ViewActivity extends AppCompatActivity {
         }
     }
 
+    private void overlay() {
+        final RelativeLayout rlOverlay = findViewById(R.id.activity_view_overlay);
+        rlOverlay.setVisibility(View.VISIBLE);
+        Button btnGotit = findViewById(R.id.activity_view_gotit);
+
+        rlOverlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        btnGotit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rlOverlay.setVisibility(View.GONE);
+            }
+        });
+    }
+
     private String getClickedText(String string, int offset) {
 
         int startIndex = offset;
@@ -198,44 +218,6 @@ public class ViewActivity extends AppCompatActivity {
         tv_result.setText(word);
     }
 
-    private void save(String mode) {
-        editor = sharedPreferences.edit();
-        if(mode.equals("dict")) {
-            String hashMap = gson.toJson(dictionary);
-            editor.putString("dict", hashMap);
-        }
-        else if(mode.equals("note")) {
-            String arrayList = gson.toJson(notes);
-            editor.putString("note", arrayList);
-        }
-        editor.apply();
-    }
-
-    private void load(String mode) {
-        gson = new Gson();
-        if(mode.equals("dict")) {
-            final String dictionaryString = sharedPreferences.getString("dict", "");
-            if(!dictionaryString.equals("")) {
-                Type type = new TypeToken<HashMap<String,Word>>(){}.getType();
-                dictionary = gson.fromJson(dictionaryString, type);
-            }
-            else{
-                dictionary = new HashMap<>();
-            }
-        }
-        else if(mode.equals("note")) {
-            String documentString = sharedPreferences.getString("note", "");
-            if(!documentString.equals("")) {
-                Type type = new TypeToken<ArrayList<Note>>(){}.getType();
-                notes = gson.fromJson(documentString, type);
-            }
-            else{
-                notes = new ArrayList<>();
-            }
-        }
-
-    }
-
     private void showDialog(String clickedText) {
         Word word = dictionary.get(clickedText);
         builder.setMessage("Word:\n\t\t\t" + clickedText +"\n\n" +"Phonetic:\n\t\t\t" + word.getPhonetic() +"\n\n\t\t\t" + word.getMeaning());
@@ -262,7 +244,7 @@ public class ViewActivity extends AppCompatActivity {
                 }
                 Note note = new Note(key, input);
                 notes.add(0, note);
-                save("note");
+                saveLoad.save(notes);
                 Toast.makeText(getApplicationContext(), "Save Successful!", Toast.LENGTH_LONG).show();
                 invalidateOptionsMenu();
                 return true;

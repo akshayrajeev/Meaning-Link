@@ -1,5 +1,8 @@
 package com.meaninglink;
 
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -29,7 +33,7 @@ class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(@NonNull PreviewAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull PreviewAdapter.ViewHolder holder, final int position) {
         final Note note = notes.get(position);
         holder.preview.setText(note.getInput());
 
@@ -40,6 +44,33 @@ class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
                 i.putExtra("input", note.getInput());
                 i.putExtra("key", note.getKey());
                 v.getContext().startActivity(i);
+            }
+        });
+
+        holder.preview.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                final Context context = v.getContext();
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setMessage("Do you want to delete this note?")
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                        .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        SaveLoad saveLoad = new SaveLoad(context);
+                        notes.remove(position);
+                        saveLoad.save(notes);
+                        notifyDataSetChanged();
+                    }
+                });
+                Dialog dialog = builder.create();
+                dialog.show();
+                return true;
             }
         });
     }

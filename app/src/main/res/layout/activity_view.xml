@@ -1,17 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginBottom="@dimen/padding"
     tools:context=".ViewActivity">
 
-    <TextView
-        android:id="@+id/activity_view_tv_result"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingStart="@dimen/padding"
-        android:paddingEnd="@dimen/padding"
-        android:paddingTop="@dimen/padding"
-        android:textSize="@dimen/text_size"/>
-</ScrollView>
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="@dimen/padding"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/activity_view_tv_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/padding"
+            android:paddingTop="@dimen/padding"
+            android:paddingEnd="@dimen/padding"
+            android:textSize="@dimen/text_size" />
+    </ScrollView>
+
+    <RelativeLayout
+        android:id="@+id/activity_view_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:drawable/screen_background_dark_transparent"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/textView"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="@dimen/preview_padding"
+            app:srcCompat="@drawable/ic_baseline_arrow_upward_72" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:fontFamily="sans-serif-smallcaps"
+            android:text="Click on Words to See Meaning"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/text_size" />
+
+        <Button
+            android:id="@+id/activity_view_gotit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textView"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/preview_padding"
+            android:background="@drawable/button"
+            android:text="Got It"
+            android:textColor="@android:color/white" />
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

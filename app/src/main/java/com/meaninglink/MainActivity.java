@@ -19,11 +19,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    SharedPreferences sharedPreferences;
-    Gson gson;
-    ArrayList<Note> notes;
     PreviewAdapter previewAdapter;
     RecyclerView previewRecyclerView;
+    SaveLoad saveLoad;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,8 +30,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        sharedPreferences = getSharedPreferences("pref", MODE_PRIVATE);
-        gson = new Gson();
+        saveLoad = new SaveLoad(getApplicationContext());
 
         previewRecyclerView = findViewById(R.id.content_main_rv_preview);
         previewRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
@@ -48,19 +45,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    void loadDocument() {
-        String documentString = sharedPreferences.getString("note", "");
-        if(!documentString.equals("")) {
-            Type type = new TypeToken<ArrayList<Note>>(){}.getType();
-            notes = gson.fromJson(documentString, type);
-            previewAdapter = new PreviewAdapter(notes);
-            previewRecyclerView.setAdapter(previewAdapter);
-        }
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-        loadDocument();
+        previewAdapter = new PreviewAdapter(saveLoad.loadNotes());
+        previewRecyclerView.setAdapter(previewAdapter);
     }
 }

@@ -3,12 +3,10 @@ package com.meaninglink;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
@@ -33,17 +31,16 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+
 
 public class ViewActivity extends AppCompatActivity {
     TextView tv_result;
     HashMap<String,Word> dictionary;
-    ArrayList<Note> notes;
     AlertDialog.Builder builder;
     String key, input;
     SaveLoad saveLoad;
+    RelativeLayout rlOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,10 +49,8 @@ public class ViewActivity extends AppCompatActivity {
 
         saveLoad = new SaveLoad(getApplicationContext());
 
-        dictionary = saveLoad.loadDictionary();
-        notes = saveLoad.loadNotes();
-
-        if(notes.size() == 0) {
+        rlOverlay = findViewById(R.id.activity_view_overlay);
+        if(saveLoad.countNote() == 0) {
             overlay();
         }
 
@@ -162,7 +157,6 @@ public class ViewActivity extends AppCompatActivity {
     }
 
     private void overlay() {
-        final RelativeLayout rlOverlay = findViewById(R.id.activity_view_overlay);
         rlOverlay.setVisibility(View.VISIBLE);
         Button btnGotit = findViewById(R.id.activity_view_gotit);
 
@@ -177,6 +171,7 @@ public class ViewActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 rlOverlay.setVisibility(View.GONE);
+                invalidateOptionsMenu();
             }
         });
     }
@@ -236,15 +231,8 @@ public class ViewActivity extends AppCompatActivity {
                 finish();
                 return true;
             case R.id.view_menu_save:
-                Iterator<Note> iterator = notes.iterator();
-                while(iterator.hasNext()) {
-                    if(iterator.next().getKey().equals(key)) {
-                        iterator.remove();
-                    }
-                }
-                Note note = new Note(key, input);
-                notes.add(0, note);
-                saveLoad.save(notes);
+                saveLoad.remove(key);
+                saveLoad.add(new Note(key, input));
                 Toast.makeText(getApplicationContext(), "Save Successful!", Toast.LENGTH_LONG).show();
                 invalidateOptionsMenu();
                 return true;
@@ -255,16 +243,23 @@ public class ViewActivity extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.view_menu, menu);
-        MenuItem item = menu.findItem(R.id.view_menu_save);
-        for (Note note : notes) {
-            if (note.getKey().equals(key)) {
-                if(note.getInput().equals(input)){
-                    item.setEnabled(false);
-                    item.getIcon().setAlpha(130);
-                }
-                else {
-                    item.getIcon().setAlpha(255);
-                }
+        MenuItem saveItem = menu.findItem(R.id.view_menu_save);
+        MenuItem editItem = menu.findItem(R.id.view_menu_edit);
+
+        if(rlOverlay.getVisibility() == View.VISIBLE) {
+            saveItem.setEnabled(false);
+            editItem.setEnabled(false);
+            saveItem.getIcon().setAlpha(130);
+            editItem.getIcon().setAlpha(130);
+        }
+        else {
+            if(saveLoad.contains(new Note(key,input))) {
+                saveItem.setEnabled(false);
+                saveItem.getIcon().setAlpha(130);
+            }
+            else {
+                saveItem.getIcon().setAlpha(255);
+                editItem.getIcon().setAlpha(255);
             }
         }
         return true;

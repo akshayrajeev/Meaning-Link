@@ -1,20 +1,14 @@
 package com.meaninglink;
 
-import java.util.Date;
-
 class Note {
-    Date lastModified;
     String input;
     String key;
+    String date;
+    String time;
 
     Note(String key, String input) {
         this.key = key;
         this.input = input;
-        //this.lastModified = lastModified;
-    }
-
-    public Date getLastModified() {
-        return lastModified;
     }
 
     public String getInput() {
@@ -25,8 +19,12 @@ class Note {
         return key;
     }
 
-    public void setLastModified(Date lastModified) {
-        this.lastModified = lastModified;
+    public String getDate() {
+        return date;
+    }
+
+    public String getTime() {
+        return time;
     }
 
     public void setInput(String input) {
@@ -35,5 +33,17 @@ class Note {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
+    public boolean equals(Note note) {
+        return this.key.equals(note.key) && this.input.equals(note.input);
     }
 }

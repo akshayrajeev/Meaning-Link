@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        previewAdapter = new PreviewAdapter(saveLoad.loadNotes());
+        previewAdapter = new PreviewAdapter(saveLoad.getNotes());
         previewRecyclerView.setAdapter(previewAdapter);
     }
 }

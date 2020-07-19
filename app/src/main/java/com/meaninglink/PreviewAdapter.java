@@ -17,6 +17,7 @@ import java.util.ArrayList;
 
 class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
     ArrayList<Note> notes;
+    SaveLoad saveLoad;
 
     PreviewAdapter(ArrayList<Note> notes) {
         this.notes = notes;
@@ -29,6 +30,7 @@ class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
                 .inflate(R.layout.row_layout, parent, false);
         int width = parent.getMeasuredWidth();
         itemView.getLayoutParams().height = width/2;
+        saveLoad = new SaveLoad(parent.getContext());
         return new ViewHolder(itemView);
     }
 
@@ -36,6 +38,12 @@ class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull PreviewAdapter.ViewHolder holder, final int position) {
         final Note note = notes.get(position);
         holder.preview.setText(note.getInput());
+        if(note.getDate().equals(saveLoad.getDate())) {
+            holder.dateTime.setText(note.getTime());
+        }
+        else {
+            holder.dateTime.setText(note.getDate());
+        }
 
         holder.preview.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,8 +58,7 @@ class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
         holder.preview.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                final Context context = v.getContext();
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
                 builder.setMessage("Do you want to delete this note?")
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
@@ -62,7 +69,6 @@ class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        SaveLoad saveLoad = new SaveLoad(context);
                         notes.remove(position);
                         saveLoad.save(notes);
                         notifyDataSetChanged();
@@ -82,10 +88,12 @@ class PreviewAdapter extends RecyclerView.Adapter<PreviewAdapter.ViewHolder> {
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView preview;
+        TextView dateTime;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             preview = itemView.findViewById(R.id.row_layout_tv_preview);
+            dateTime = itemView.findViewById(R.id.row_layout_datetime);
         }
     }
 }

@@ -1,36 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="@dimen/preview_padding">
 
-    <androidx.cardview.widget.CardView
+    <TextView
+        android:id="@+id/row_layout_datetime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        android:layout_marginStart="@dimen/preview_padding"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/row_layout_tv_preview"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:cardUseCompatPadding="true"
-        app:cardCornerRadius="@dimen/padding"
+        android:background="@drawable/border"
+        android:padding="@dimen/preview_padding"
+        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/border">
-
-            <TextView
-                android:id="@+id/row_layout_tv_preview"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:padding="@dimen/preview_padding"
-                android:text="TextView"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.cardview.widget.CardView>
+        app:layout_constraintTop_toBottomOf="@+id/row_layout_datetime" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -11,12 +11,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 
 class SaveLoad {
     ArrayList<Note> notes;
-    HashMap<String,Word> dict;
+    LinkedHashMap<String,Word> dict;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
     Gson gson;
@@ -81,7 +81,7 @@ class SaveLoad {
         return notes;
     }
 
-    void save(HashMap<String,Word> dict) {
+    void save(LinkedHashMap<String,Word> dict) {
         editor = sharedPreferences.edit();
         String strDict = gson.toJson(dict);
         editor.putString("dict", strDict);
@@ -91,12 +91,29 @@ class SaveLoad {
     void loadDictionary() {
         String strDict = sharedPreferences.getString("dict", "");
         if(!strDict.equals("")) {
-            Type type = new TypeToken<HashMap<String,Word>>(){}.getType();
+            Type type = new TypeToken<LinkedHashMap<String,Word>>(){}.getType();
             dict = gson.fromJson(strDict, type);
         }
         else {
-            dict = new HashMap<>();
+            dict = new LinkedHashMap<>();
         }
+    }
+
+    void add(String word, Word data) {
+        //dict = new LinkedHashMap<>();
+        dict.put(word, data);
+        save(dict);
+    }
+
+    boolean contains(String word) {
+        return dict.containsKey(word);
+    }
+
+    Word getWord(String word) {
+        if(dict.containsKey(word)) {
+            return dict.get(word);
+        }
+        return null;
     }
 
     String getDate() {

@@ -28,15 +28,13 @@ import android.widget.Toast;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.util.HashMap;
-
 
 public class ViewActivity extends AppCompatActivity {
     TextView tv_result;
-    HashMap<String,Word> dictionary;
     AlertDialog.Builder builder;
     String key, input;
     SaveLoad saveLoad;
@@ -87,7 +85,7 @@ public class ViewActivity extends AppCompatActivity {
                         try {
                             if (Character.isLetter(input.charAt(mOffset))) {
                                 String clickedText = getClickedText(input, mOffset);
-                                if(dictionary.containsKey(clickedText)) {
+                                if(saveLoad.contains(clickedText.toLowerCase())) {
                                     showDialog(clickedText);
                                 }
                                 else {
@@ -104,10 +102,9 @@ public class ViewActivity extends AppCompatActivity {
         });
     }
 
-    private class getMeaning extends AsyncTask<String, Void, String> {
+    private class getMeaning extends AsyncTask<String, Void, Boolean> {
         ProgressDialog pd;
-        String URL = "https://www.google.com/search?q=define+";
-        public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36";
+        String searchString = "";
 
         @Override
         protected void onPreExecute() {
@@ -119,40 +116,118 @@ public class ViewActivity extends AppCompatActivity {
         }
 
         @Override
-        protected String doInBackground(final String... strings) {
-            URL += strings[0];
-
+        protected Boolean doInBackground(String... strings) {
+            searchString = strings[0];
             try {
-                Word word = new Word();
-
-                Document document = Jsoup.connect(URL).userAgent(USER_AGENT).get();
-
-                //To get the phonetics of the searched word
-                Elements phoneticElement = document.select("span[class=XpoqFe]");
-                String phonetic = phoneticElement.text();
-
-                //To get the meaning of the searched word
-                Elements meaningElement = document.select("div[class=QIclbb XpoqFe]");
-                String meaning = meaningElement.text();
-
-                word.setPhonetic(phonetic);
-                word.setMeaning(meaning);
-
-                dictionary.put(strings[0], word);
-
-                //saveDictionary();
-
-            }catch (IOException e) {
+                if(scrape(searchString)) {
+                    return false;
+                }
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-            return strings[0];
+            return true;
         }
 
-
         @Override
-        protected void onPostExecute(String clickedText) {
+        protected void onPostExecute(Boolean isNull) {
+            if(isNull) {
+                Toast.makeText(getApplicationContext(), "No Such Word Found", Toast.LENGTH_LONG).show();
+            }
+            else {
+                showDialog(searchString);
+            }
             pd.dismiss();
-            showDialog(clickedText);
+        }
+    }
+
+    String handleDictionaryCodes(String sentence) {
+        sentence = sentence.replace("[ T ]","[Transitive Verb]");
+        sentence = sentence.replace("[ I ]","[Intransitive Verb]");
+        sentence = sentence.replace("[ L ]", "[Linking Verb]");
+        sentence = sentence.replace("[ C ]", "[Countable Noun]");
+        sentence = sentence.replace("[ U ]", "[Uncountable Noun]");
+        return sentence;
+    }
+
+    private boolean scrape(String searchString) throws IOException {
+        String URL = "https://dictionary.cambridge.org/us/dictionary/english/" + searchString;
+
+        Word word = new Word();
+
+        Document document = Jsoup.connect(URL).get();
+        Elements sections = document.select("div[class=pr dsense]");
+        if(sections.size() == 0) {
+            sections = document.select("div[class=pr entry-body__el]");
+            for(Element section : sections) {
+                Elements headings = section.select("span[class=pos dpos]");
+                String stringHeading = "";
+                if(headings.size() > 0) {
+                    for(Element heading : headings) {
+                        String temp = heading.text();
+                        temp = temp.substring(0,1).toUpperCase() + temp.substring(1);
+                        stringHeading += temp + "/";
+                    }
+                    stringHeading = stringHeading.substring(0,stringHeading.length()-1);
+                }
+                else if(headings.size() == 0) {
+                    stringHeading = "Short Form";
+                }
+                else {
+                    stringHeading = headings.text();
+                    stringHeading = stringHeading.substring(0,1).toUpperCase() + stringHeading.substring(1);
+                }
+                String stringMeaning = section.select("div[class=def ddef_d db]").text();
+                if(stringMeaning.endsWith(":")) {
+                    stringMeaning = stringMeaning.substring(0,stringMeaning.length()-1);
+                }
+                stringMeaning = stringMeaning.substring(0,1).toUpperCase() + stringMeaning.substring(1);
+                Elements exampleSentences = section.select("div[class=examp dexamp]");
+                if(exampleSentences.size() > 0) {
+                    word.addMeaning(stringHeading,stringMeaning);
+                }
+                for(Element exampleSentence : exampleSentences) {
+                    word.addExample(stringMeaning,handleDictionaryCodes(exampleSentence.text()));
+                }
+            }
+        }
+        else {
+            for(Element section : sections) {
+                Elements mainHeading = section.select("span[class=pos dsense_pos]");
+                String stringMainHeading = "";
+                if(mainHeading.size() > 0) {
+                    for (Element heading : mainHeading) {
+                        String temp = heading.text();
+                        temp = temp.substring(0, 1).toUpperCase() + temp.substring(1);
+                        stringMainHeading += temp + "/";
+                    }
+                    stringMainHeading = stringMainHeading.substring(0,stringMainHeading.length()-1);
+                }
+                String subHeading = section.select("span[class=guideword dsense_gw]").text();
+                String heading = stringMainHeading + " " + subHeading;
+                heading = heading.substring(0,1).toUpperCase() + heading.substring(1);
+                Elements subSections = section.select("div[class=def-block ddef_block ]");
+                for(Element subSection : subSections) {
+                    String stringMeaning = subSection.select("div[class=def ddef_d db]").text();
+                    if(stringMeaning.endsWith(":")) {
+                        stringMeaning = stringMeaning.substring(0,stringMeaning.length()-1);
+                    }
+                    stringMeaning = stringMeaning.substring(0,1).toUpperCase() + stringMeaning.substring(1);
+                    Elements exampleSentences = subSection.select("div[class=examp dexamp]");
+                    if(exampleSentences.size() > 0) {
+                        word.addMeaning(heading,stringMeaning);
+                    }
+                    for(Element exampleSentence : exampleSentences) {
+                        word.addExample(stringMeaning,handleDictionaryCodes(exampleSentence.text()));
+                    }
+                }
+            }
+        }
+        if(word.isNull()) {
+            return false;
+        }
+        else {
+            saveLoad.add(searchString.toLowerCase(),word);
+            return true;
         }
     }
 
@@ -214,8 +289,8 @@ public class ViewActivity extends AppCompatActivity {
     }
 
     private void showDialog(String clickedText) {
-        Word word = dictionary.get(clickedText);
-        builder.setMessage("Word:\n\t\t\t" + clickedText +"\n\n" +"Phonetic:\n\t\t\t" + word.getPhonetic() +"\n\n\t\t\t" + word.getMeaning());
+        Word word = saveLoad.getWord(clickedText.toLowerCase());
+        builder.setMessage(word.getMessage());
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
